@@ -11,7 +11,7 @@ const fnOptions = [
 ];
 
 // estado
-const selected = ref("");   // ← placeholder por defecto
+const selected = ref("");   // placeholder por defecto
 const xi = ref(0), xf = ref(1), inc = ref(0.1);
 const rows = ref([]);       // [{x,y}]
 const extremos = ref(null); // {yMax,xAtMax,yMin,xAtMin} | null
@@ -77,134 +77,219 @@ function generar(){
 </script>
 
 <template>
-  <main class="card">
-    <header class="header">
-      <div class="logo">📊</div>
-      <h1>Tabular Funciones</h1>
-      <p class="subtitle">Selecciona los límites y el incremento para tabular la función</p>
+  <div class="page">
+    <header class="topbar">
+      <div class="brand">📊</div>
+      <div>
+        <h1>Tabular Funciones</h1>
+        <p>Selecciona límites e incremento para generar la tabla</p>
+      </div>
     </header>
 
-    <section v-if="errorMsg" class="alert">
-      <span>⚠️</span> {{ errorMsg }}
-      <button class="close" @click="errorMsg = ''">✕</button>
-    </section>
+    <div class="layout">
+      <!-- Panel izquierdo (controles) -->
+      <aside class="panel">
+        <h2 class="panel-title">Parámetros</h2>
 
-    <section class="controls">
-      <label class="full">
-        <span>Función a tabular</span>
-        <select v-model="selected">
-          <option disabled value="">Selecciona función</option>
-          <option v-for="o in fnOptions" :key="o.key" :value="o.key">{{ o.label }}</option>
-        </select>
-      </label>
-
-      <label>
-        <span>Límite inferior</span>
-        <input v-model.number="xi" type="number" step="any">
-      </label>
-      <label>
-        <span>Límite superior</span>
-        <input v-model.number="xf" type="number" step="any">
-      </label>
-      <label>
-        <span>Incremento</span>
-        <input v-model.number="inc" type="number" step="any">
-      </label>
-
-      <button class="primary" @click="generar" :disabled="!isValid">Generar Tabla</button>
-    </section>
-
-    <section class="table-wrap" v-if="rows.length">
-      <table>
-        <thead><tr><th>X</th><th>Y</th></tr></thead>
-        <tbody>
-          <tr v-for="(r,i) in rows" :key="i">
-            <td>{{ r.x }}</td>
-            <td>{{ r.y }}</td>
-          </tr>
-        </tbody>
-      </table>
-    </section>
-
-    <section class="extremos" v-if="extremos">
-      <h2>Puntos máximo y mínimo</h2>
-      <div class="cards">
-        <div class="ext-card ok">
-          <h3>Valor Máximo</h3>
-          <p class="val">Y = {{ extremos.yMax }}</p>
-          <p class="at">en X = {{ extremos.xAtMax }}</p>
+        <div v-if="errorMsg" class="notice">
+          <span>⚠️</span> <strong>{{ errorMsg }}</strong>
+          <button class="close" @click="errorMsg = ''" aria-label="Cerrar">✕</button>
         </div>
-        <div class="ext-card bad">
-          <h3>Valor Mínimo</h3>
-          <p class="val">Y = {{ extremos.yMin }}</p>
-          <p class="at">en X = {{ extremos.xAtMin }}</p>
-        </div>
-      </div>
-    </section>
 
-    <footer class="foot">
-      <small>Salida en notación fija con seis cifras decimales.</small>
-    </footer>
-  </main>
+        <label class="field">
+          <span>Función</span>
+          <select v-model="selected">
+            <option disabled value="">Selecciona función</option>
+            <option v-for="o in fnOptions" :key="o.key" :value="o.key">{{ o.label }}</option>
+          </select>
+        </label>
+
+        <div class="grid-2">
+          <label class="field">
+            <span>Límite inferior</span>
+            <input v-model.number="xi" type="number" step="any" />
+          </label>
+          <label class="field">
+            <span>Límite superior</span>
+            <input v-model.number="xf" type="number" step="any" />
+          </label>
+        </div>
+
+        <label class="field">
+          <span>Incremento</span>
+          <input v-model.number="inc" type="number" step="any" />
+        </label>
+
+        <button class="btn" @click="generar" :disabled="!isValid">Generar tabla</button>
+
+        <p class="hint">Salida en notación fija con <strong>6 decimales</strong>.</p>
+      </aside>
+
+      <!-- Resultados -->
+      <section class="results">
+        <div class="ext-cards" v-if="extremos">
+          <div class="card good">
+            <div class="badge">Máximo</div>
+            <div class="kv">
+              <div class="k">Y</div><div class="v">{{ extremos.yMax }}</div>
+              <div class="k">en X</div><div class="v">{{ extremos.xAtMax }}</div>
+            </div>
+          </div>
+          <div class="card bad">
+            <div class="badge">Mínimo</div>
+            <div class="kv">
+              <div class="k">Y</div><div class="v">{{ extremos.yMin }}</div>
+              <div class="k">en X</div><div class="v">{{ extremos.xAtMin }}</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="table-wrap" v-if="rows.length">
+          <table>
+            <thead>
+              <tr>
+                <th style="width:40%">X</th>
+                <th>Y</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="(r,i) in rows" :key="i">
+                <td>{{ r.x }}</td>
+                <td>{{ r.y }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div v-else class="empty">
+          <p>Elige una función y pulsa <strong>Generar tabla</strong>.</p>
+        </div>
+      </section>
+    </div>
+  </div>
 </template>
 
 <style>
-:root{ --bg:#0f1115; --card:#171923; --muted:#9aa4b2; --text:#e7ecf3;
-  --accent:#60a5fa; --ok:#22c55e; --bad:#ef4444; --ring:#2a2f3a; }
+/* ===== Paleta clara con acento teal/indigo ===== */
+:root{
+  --bg:#f6f7fb;
+  --ink:#0f172a;         /* texto principal */
+  --muted:#5b647a;       /* texto secundario */
+  --panel:#ffffff;       /* panel izquierdo */
+  --panel-border:#e6e9f2;
+  --surface:#ffffff;     /* tarjetas/tabla */
+  --surface-br:#e6e9f2;
+  --accent:#16a34a;      /* teal/verde */
+  --accent-2:#4f46e5;    /* indigo para detalles */
+  --good:#059669;
+  --bad:#dc2626;
+}
+
+/* Layout base */
 *{box-sizing:border-box}
-main.card{
-  width:min(920px,92vw); background:var(--card); color:var(--text);
-  border:1px solid var(--ring); border-radius:18px; padding:24px 24px 12px;
-  margin:24px auto; box-shadow:0 10px 30px #00000055;
-  font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial;
-}
-.header{display:grid; gap:6px; justify-items:center; text-align:center; margin-bottom:10px}
-.logo{font-size:40px}
-h1{margin:0; font-size:clamp(24px,4vw,40px); color:#a7c4ff}
-.subtitle{margin:0; color:var(--muted)}
+html,body,#app{height:100%}
+body{margin:0; background:var(--bg); color:var(--ink);
+  font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Inter,Roboto,Arial}
 
-.alert{
-  display:flex; align-items:center; gap:8px;
-  background:#7f1d1d; border:1px solid #450a0a; color:#fff; padding:10px 12px;
-  border-radius:10px; margin:10px 0;
+/* Barra superior */
+.topbar{
+  display:flex; align-items:center; gap:14px;
+  padding:22px 28px; background:linear-gradient(90deg,#eef3ff,#e9fff2);
+  border-bottom:1px solid #e7ecfa;
 }
-.alert .close{margin-left:auto; background:transparent; border:0; color:#fff; cursor:pointer}
+.brand{font-size:34px}
+.topbar h1{margin:0; font-size:clamp(22px,3.6vw,32px); color:var(--accent-2)}
+.topbar p{margin:2px 0 0; color:var(--muted); font-weight:600}
 
-.controls{display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin:18px 0 8px}
-.controls .full{grid-column:1/-1}
-label{display:grid; gap:6px; font-size:14px}
+/* Disposición principal */
+.layout{
+  max-width:1100px; margin:20px auto; padding:0 20px;
+  display:grid; grid-template-columns:320px 1fr; gap:22px;
+}
+@media (max-width:900px){ .layout{ grid-template-columns:1fr; } }
+
+/* Panel izquierdo */
+.panel{
+  background:var(--panel); border:1px solid var(--panel-border);
+  border-radius:16px; padding:18px; position:sticky; top:16px; height:fit-content;
+  box-shadow:0 6px 18px rgba(15,23,42,.06);
+}
+.panel-title{margin:0 0 10px; font-size:16px; color:var(--muted); text-transform:uppercase; letter-spacing:.06em}
+
+.notice{
+  display:flex; align-items:center; gap:10px; padding:10px 12px;
+  background:#fff1f2; color:#991b1b; border:1px solid #fecaca; border-radius:12px; margin-bottom:10px;
+}
+.notice .close{margin-left:auto; background:transparent; border:0; color:#991b1b; cursor:pointer; font-size:16px}
+
+.field{display:grid; gap:6px; margin-bottom:12px}
+.field span{font-size:13px; color:var(--muted); font-weight:700; letter-spacing:.02em}
 input,select{
-  background:#0d0f14; color:var(--text); border:1px solid #2a3140; border-radius:10px;
-  padding:10px 12px; outline:none;
+  background:#fbfdff; border:1px solid #cfd6ea; border-radius:10px; padding:10px 12px;
+  color:var(--ink); outline:none; font-weight:600;
 }
-input:focus,select:focus{border-color:var(--accent); box-shadow:0 0 0 3px #60a5fa22}
-.primary{
-  grid-column:1/-1; padding:12px 16px; border-radius:12px; border:1px solid #2a3140;
-  background:linear-gradient(180deg,#1e293b,#111827); color:#cde1ff; font-weight:600;
-  cursor:pointer; transition:transform .05s ease, box-shadow .15s ease;
+input:focus,select:focus{border-color:#8aa2ff; box-shadow:0 0 0 3px rgba(138,162,255,.25)}
+.grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr; 
+  gap: 12px;
 }
-.primary:disabled{opacity:.5; cursor:not-allowed}
-.primary:hover:not(:disabled){box-shadow:0 6px 20px #00000050}
-.primary:active:not(:disabled){transform:translateY(1px)}
 
-.table-wrap{max-height:360px; overflow:auto; border:1px solid #2a3140; border-radius:12px}
-table{width:100%; border-collapse:collapse}
+.grid-2 input {
+  width: 100%;       
+  max-width: 100%;    
+  box-sizing: border-box;
+}
+
+/* Botón */
+.btn{
+  width:100%; padding:12px 14px; border:0; border-radius:12px;
+  background:linear-gradient(90deg,var(--accent),#22c55e); color:#fff; font-weight:800;
+  letter-spacing:.02em; cursor:pointer; box-shadow:0 8px 18px rgba(34,197,94,.25);
+}
+.btn:disabled{opacity:.5; cursor:not-allowed; box-shadow:none}
+
+/* Resultados */
+.results{min-height:300px}
+
+.ext-cards{
+  display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:14px;
+}
+@media (max-width:600px){ .ext-cards{grid-template-columns:1fr} }
+
+.card{
+  background:var(--surface); border:1px solid var(--surface-br);
+  border-radius:14px; padding:14px; box-shadow:0 6px 16px rgba(15,23,42,.06);
+}
+.card.good{border-color:#bbf7d0}
+.card.bad{border-color:#fecaca}
+.badge{
+  display:inline-block; padding:4px 10px; border-radius:999px;
+  background:#eef2ff; color:var(--accent-2); font-weight:800; letter-spacing:.04em; font-size:12px;
+}
+.kv{display:grid; grid-template-columns:auto 1fr; gap:6px 10px; margin-top:10px}
+.k{color:var(--muted); font-weight:700}
+.v{font-weight:900}
+.card.good .v{color:var(--good)}
+.card.bad  .v{color:var(--bad)}
+
+/* Tabla */
+.table-wrap{
+  background:var(--surface); border:1px solid var(--surface-br);
+  border-radius:14px; overflow:auto; box-shadow:0 8px 18px rgba(15,23,42,.06);
+}
+table{width:100%; border-collapse:separate; border-spacing:0}
 thead th{
-  position:sticky; top:0; background:#0d0f14; color:#a7c4ff; letter-spacing:.03em;
-  padding:12px; border-bottom:1px solid #2a3140; text-align:left;
+  position:sticky; top:0; background:#eef2ff; color:#1e293b; text-align:left;
+  padding:12px 14px; font-size:13px; letter-spacing:.06em; text-transform:uppercase;
+  border-bottom:1px solid var(--surface-br);
 }
-tbody td{padding:12px; border-bottom:1px dashed #2a314033; font-variant-numeric:tabular-nums}
-tbody tr:nth-child(even){background:#0f1118}
-
-.extremos{margin:16px 0 10px}
-.extremos h2{color:#a7c4ff; text-align:center; margin:6px 0 14px}
-.cards{display:grid; grid-template-columns:1fr 1fr; gap:14px}
-.ext-card{border:1px solid #2a3140; border-radius:14px; padding:14px; background:#0d0f14}
-.ext-card h3{margin:0 0 8px; color:var(--muted)}
-.ext-card.ok .val{color:var(--ok)} .ext-card.bad .val{color:var(--bad)}
-.val{font-size:22px; font-weight:700; margin:4px 0}
-.at{color:var(--muted); margin:0}
-.foot{display:flex; justify-content:center; padding:6px 0 0}
-small{color:var(--muted)}
-@media (max-width:720px){ .controls{grid-template-columns:1fr 1fr} .cards{grid-template-columns:1fr}}
+tbody td{
+  padding:12px 14px; border-bottom:1px solid #eef1f7; font-variant-numeric:tabular-nums; font-weight:700;
+}
+tbody tr:nth-child(even){ background:#fafbff }
+.empty{
+  display:grid; place-items:center; padding:40px; color:var(--muted);
+}
+.hint{color:var(--muted); font-size:12px; margin:10px 2px 0}
 </style>
